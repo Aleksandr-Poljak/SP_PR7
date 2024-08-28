@@ -15,6 +15,8 @@ HWND hButtonText;                               // Кнопка Текст
 HWND hButtonDrawShape;                          // Кнопка Рисовать
 HWND hButtonImage;                              // Кнопка Изображение
 
+bool textFlag = FALSE;
+
 // Отправить объявления функций, включенных в этот модуль кода:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
@@ -152,12 +154,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
-            // Разобрать выбор в меню:
             switch (wmId)
             {
             case IDC_BTN_TEXT:
-                MessageBox(hWnd, TEXT("Нажата кнопка Текст"), TEXT("Информация"), MB_OK);
+            {
+                textFlag = TRUE;
+                InvalidateRect(hWnd, nullptr, TRUE);
                 break;
+            }
             case IDC_BTN_DRAW:
                 MessageBox(hWnd, TEXT("Нажата кнопка Рисовать"), TEXT("Информация"), MB_OK);
                 break;
@@ -179,7 +183,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
-            // TODO: Добавьте сюда любой код прорисовки, использующий HDC...
+            if (textFlag)
+            {
+                HFONT hFont = CreateTaskFont();
+                SelectObject(hdc, hFont);
+                LPCWSTR text = _T("Поляк Александр Александрович.");
+                SetTextColor(hdc, RGB(255, 0, 0));
+                SetBkMode(hdc, TRANSPARENT);
+                TextOut(hdc, 300, 450, text, lstrlen(text));
+                DeleteObject(hFont);
+                textFlag = FALSE;
+            }
             EndPaint(hWnd, &ps);
         }
         break;
