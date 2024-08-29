@@ -16,6 +16,7 @@ HWND hButtonDrawShape;                          // Кнопка Рисовать
 HWND hButtonImage;                              // Кнопка Изображение
 
 bool textFlag = FALSE;
+bool shapeFlag = FALSE;
 
 // Отправить объявления функций, включенных в этот модуль кода:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -163,7 +164,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 break;
             }
             case IDC_BTN_DRAW:
-                MessageBox(hWnd, TEXT("Нажата кнопка Рисовать"), TEXT("Информация"), MB_OK);
+                shapeFlag = TRUE;
+                InvalidateRect(hWnd, nullptr, TRUE);
                 break;
             case IDC_BTN_IMAGE:
                 MessageBox(hWnd, TEXT("Нажата кнопка Изображение"), TEXT("Информация"), MB_OK);
@@ -183,6 +185,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
+            // Отображаем текст
             if (textFlag)
             {
                 HFONT hFont = CreateTaskFont();
@@ -194,6 +197,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 DeleteObject(hFont);
                 textFlag = FALSE;
             }
+            // Рисуем звезду
+            if (shapeFlag)
+            {
+                DrawStarFullShading(hdc, 600, 200, 80);
+                DrawStarTopsShading(hdc, 400, 200, 80);
+                shapeFlag = FALSE;
+            }
+
             EndPaint(hWnd, &ps);
         }
         break;
