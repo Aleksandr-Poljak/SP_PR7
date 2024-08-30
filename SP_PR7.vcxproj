@@ -140,6 +140,7 @@
     <ResourceCompile Include="SP_PR7.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="bitmap1.bmp" />
     <Image Include="small.ico" />
     <Image Include="SP_PR7.ico" />
   </ItemGroup>

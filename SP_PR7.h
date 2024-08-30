@@ -12,6 +12,13 @@ extern HDC hDCMetafile;
 extern HMETAFILE hmf;
 extern LPCWSTR metafileName;
 
+extern HDC hdc;
+extern HBITMAP hBitmap;
+extern HDC memBit;
+extern BITMAP bm;
+
+
+
 extern bool textFlag;
 extern bool shapeFlag;
 extern bool textFlagMetafile;

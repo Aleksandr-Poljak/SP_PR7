@@ -17,6 +17,12 @@ HWND hButtonImage;                              // Кнопка Изображе
 HWND hButtonTextMetafile;                       // Кнопка воспроизведения  метафайла
 HMETAFILE hmf = NULL;                           
 
+HBITMAP hBitmap;
+HDC memBit;
+HDC hdc;
+BITMAP bm;
+
+
 bool textFlag = FALSE;
 bool shapeFlag = FALSE;
 bool textFlagMetafile = FALSE;
@@ -196,9 +202,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             shapeFlag = TRUE;
             InvalidateRect(hWnd, nullptr, TRUE);
             break;
-        case IDC_BTN_IMAGE:
-            MessageBox(hWnd, TEXT("Нажата кнопка Изображение"), TEXT("Информация"), MB_OK);
+        case IDC_BTN_IMAGE:          
+        {
+            hdc = GetDC(hWnd);
+            hBitmap = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_BITMAP1));
+            GetObject(hBitmap, sizeof(bm), &bm);
+            memBit = CreateCompatibleDC(hdc);
+            SelectObject(memBit, hBitmap);
+            int targetWidth = 100;
+            int targetHeight = 100;
+
+            RECT clientRect;
+            GetClientRect(hWnd, &clientRect);
+
+            int x = (clientRect.right - targetWidth) / 2;
+            int y = (clientRect.bottom - targetHeight) / 2;
+
+            StretchBlt(hdc, x, y, targetWidth, targetHeight, memBit, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
+
+            DeleteDC(memBit);
+            DeleteObject(hBitmap);
+            ReleaseDC(hWnd, hdc);
             break;
+        }
         case IDM_ABOUT:
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
             break;
