@@ -14,9 +14,12 @@ WCHAR szWindowClass[MAX_LOADSTRING];            // имя класса глав�
 HWND hButtonText;                               // Кнопка Текст
 HWND hButtonDrawShape;                          // Кнопка Рисовать
 HWND hButtonImage;                              // Кнопка Изображение
+HWND hButtonTextMetafile;                       // Кнопка воспроизведения  метафайла
+HMETAFILE hmf = NULL;                           
 
 bool textFlag = FALSE;
 bool shapeFlag = FALSE;
+bool textFlagMetafile = FALSE;
 
 // Отправить объявления функций, включенных в этот модуль кода:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -25,9 +28,9 @@ LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
-                     _In_opt_ HINSTANCE hPrevInstance,
-                     _In_ LPWSTR    lpCmdLine,
-                     _In_ int       nCmdShow)
+    _In_opt_ HINSTANCE hPrevInstance,
+    _In_ LPWSTR    lpCmdLine,
+    _In_ int       nCmdShow)
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
@@ -40,7 +43,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     MyRegisterClass(hInstance);
 
     // Выполнить инициализацию приложения:
-    if (!InitInstance (hInstance, nCmdShow))
+    if (!InitInstance(hInstance, nCmdShow))
     {
         return FALSE;
     }
@@ -59,10 +62,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         }
     }
 
-    return (int) msg.wParam;
+    return (int)msg.wParam;
 }
-
-
 
 //
 //  ФУНКЦИЯ: MyRegisterClass()
@@ -75,17 +76,17 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 
     wcex.cbSize = sizeof(WNDCLASSEX);
 
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc    = WndProc;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SPPR7));
-    wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_SPPR7);
-    wcex.lpszClassName  = szWindowClass;
-    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+    wcex.style = CS_HREDRAW | CS_VREDRAW;
+    wcex.lpfnWndProc = WndProc;
+    wcex.cbClsExtra = 0;
+    wcex.cbWndExtra = 0;
+    wcex.hInstance = hInstance;
+    wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SPPR7));
+    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_SPPR7);
+    wcex.lpszClassName = szWindowClass;
+    wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
     return RegisterClassExW(&wcex);
 }
@@ -102,20 +103,20 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 //
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-   hInst = hInstance; // Сохранить маркер экземпляра в глобальной переменной
+    hInst = hInstance; // Сохранить маркер экземпляра в глобальной переменной
 
-   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
 
-   if (!hWnd)
-   {
-      return FALSE;
-   }
+    if (!hWnd)
+    {
+        return FALSE;
+    }
 
-   ShowWindow(hWnd, nCmdShow);
-   UpdateWindow(hWnd);
+    ShowWindow(hWnd, nCmdShow);
+    UpdateWindow(hWnd);
 
-   return TRUE;
+    return TRUE;
 }
 
 //
@@ -133,6 +134,27 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
     case WM_CREATE:
+    {
+        LPCWSTR metafileName = L"output.wmf";
+        HDC hDCMetafile = CreateMetaFile(metafileName);
+        if (hDCMetafile != NULL)
+        {
+            HFONT hFont = CreateTaskFont();
+            SelectObject(hDCMetafile, hFont);
+            LPCWSTR text = _T("Поляк Александр Александрович. Вывод из метафайла.");
+            SetTextColor(hDCMetafile, RGB(255, 0, 0));
+            SetBkMode(hDCMetafile, TRANSPARENT);
+            TextOut(hDCMetafile, 20, 450, text, lstrlen(text));
+            DeleteObject(hFont);
+            hmf = CloseMetaFile(hDCMetafile);
+        }
+        
+        hButtonTextMetafile = CreateWindowEx(0L, TEXT("BUTTON"), TEXT("Текст из метафайла"),
+            WS_CHILD | WS_BORDER | WS_VISIBLE,
+            30, 20, 140, 24, hWnd,
+            (HMENU)IDC_BTN_TEXT_IN_METAFILE, hInst, NULL);
+        if (hButtonTextMetafile == 0) return -1;
+
         hButtonText = CreateWindowEx(0L, TEXT("BUTTON"), TEXT("Текст"),
             WS_CHILD | WS_BORDER | WS_VISIBLE,
             30, 60, 80, 24, hWnd,
@@ -152,62 +174,77 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         if (hButtonImage == 0) return -1;
         return 0;
         break;
+    }
     case WM_COMMAND:
+    {
+        int wmId = LOWORD(wParam);
+        switch (wmId)
         {
-            int wmId = LOWORD(wParam);
-            switch (wmId)
-            {
-            case IDC_BTN_TEXT:
-            {
-                textFlag = TRUE;
-                InvalidateRect(hWnd, nullptr, TRUE);
-                break;
-            }
-            case IDC_BTN_DRAW:
-                shapeFlag = TRUE;
-                InvalidateRect(hWnd, nullptr, TRUE);
-                break;
-            case IDC_BTN_IMAGE:
-                MessageBox(hWnd, TEXT("Нажата кнопка Изображение"), TEXT("Информация"), MB_OK);
-                break;
-            case IDM_ABOUT:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-                break;
-            case IDM_EXIT:
-                DestroyWindow(hWnd);
-                break;
-            default:
-                return DefWindowProc(hWnd, message, wParam, lParam);
-            }
+        case IDC_BTN_TEXT:
+        {
+            textFlag = TRUE;
+            InvalidateRect(hWnd, nullptr, TRUE);
+            break;
         }
-        break;
+        case IDC_BTN_TEXT_IN_METAFILE:
+        {
+            textFlagMetafile = TRUE;
+            InvalidateRect(hWnd, nullptr, TRUE);
+            break;
+        }
+        case IDC_BTN_DRAW:
+            shapeFlag = TRUE;
+            InvalidateRect(hWnd, nullptr, TRUE);
+            break;
+        case IDC_BTN_IMAGE:
+            MessageBox(hWnd, TEXT("Нажата кнопка Изображение"), TEXT("Информация"), MB_OK);
+            break;
+        case IDM_ABOUT:
+            DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+            break;
+        case IDM_EXIT:
+            DestroyWindow(hWnd);
+            break;
+        default:
+            return DefWindowProc(hWnd, message, wParam, lParam);
+        }
+    }
+    break;
     case WM_PAINT:
+    {
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hWnd, &ps);
+        // Отображаем текст
+        if (textFlag)
         {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hWnd, &ps);
-            // Отображаем текст
-            if (textFlag)
-            {
-                HFONT hFont = CreateTaskFont();
-                SelectObject(hdc, hFont);
-                LPCWSTR text = _T("Поляк Александр Александрович.");
-                SetTextColor(hdc, RGB(255, 0, 0));
-                SetBkMode(hdc, TRANSPARENT);
-                TextOut(hdc, 300, 450, text, lstrlen(text));
-                DeleteObject(hFont);
-                textFlag = FALSE;
-            }
-            // Рисуем звезду
-            if (shapeFlag)
-            {
-                DrawStarFullShading(hdc, 600, 200, 80);
-                DrawStarTopsShading(hdc, 400, 200, 80);
-                shapeFlag = FALSE;
-            }
-
-            EndPaint(hWnd, &ps);
+            HFONT hFont = CreateTaskFont();
+            SelectObject(hdc, hFont);
+            LPCWSTR text = _T("Поляк Александр Александрович.");
+            SetTextColor(hdc, RGB(255, 0, 0));
+            SetBkMode(hdc, TRANSPARENT);
+            TextOut(hdc, 300, 450, text, lstrlen(text));
+            DeleteObject(hFont);
+            textFlag = FALSE;
         }
-        break;
+        if (textFlagMetafile)
+        {
+            if (hmf != NULL)
+            { 
+                PlayMetaFile(hdc, hmf); 
+                textFlagMetafile = FALSE;
+            }
+        }
+        // Рисуем звезду
+        if (shapeFlag)
+        {
+            DrawStarFullShading(hdc, 600, 200, 80);
+            DrawStarTopsShading(hdc, 400, 200, 80);
+            shapeFlag = FALSE;
+        }
+
+        EndPaint(hWnd, &ps);
+    }
+    break;
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
@@ -227,7 +264,8 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         return (INT_PTR)TRUE;
 
     case WM_COMMAND:
-        if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
+        if (LOWORD(wParam) == IDOK ||
+            LOWORD(wParam) == IDCANCEL)
         {
             EndDialog(hDlg, LOWORD(wParam));
             return (INT_PTR)TRUE;

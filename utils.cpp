@@ -25,13 +25,12 @@ HFONT APIENTRY CreateTaskFont()
 };
 
 // Функции для рисования звезды и окружности
-
 void DrawStarFullShading(HDC hdc, int xCenter, int yCenter, int radius)
 {
-    // Рисует звезду с полной заливкой и описанную окружность 
+    // Рисует звезду с полной закраской и описанную окружность 
 
     HPEN hPen = CreatePen(PS_SOLID, 2, RGB(0, 0, 255));
-    HBRUSH hBrush =  CreateHatchBrush(HS_FDIAGONAL, RGB(255, 255, 0));
+    HBRUSH hBrush =  CreateHatchBrush(HS_BDIAGONAL, RGB(255, 255, 0));
     HPEN hOldPen = (HPEN)SelectObject(hdc, hPen);
     
 
@@ -79,10 +78,10 @@ struct Triangle
 
 void DrawStarTopsShading(HDC hdc, int xCenter, int yCenter, int radius)
 {
-    // Рисует звезду с полной заливкой и описанную окружность 
+    // Рисует звезду с частичной закраской и описанную окружность 
 
     HPEN hPen = CreatePen(PS_SOLID, 2, RGB(0, 0, 255));
-    HBRUSH hBrushTops = CreateHatchBrush(HS_FDIAGONAL, RGB(255, 255, 0));
+    HBRUSH hBrushTops = CreateHatchBrush(HS_BDIAGONAL, RGB(255, 255, 0));
     HBRUSH hBrushEl = (HBRUSH)GetStockObject(NULL_BRUSH);
 
     const int numPoints = 5; // Количество вершин звезды
@@ -96,11 +95,11 @@ void DrawStarTopsShading(HDC hdc, int xCenter, int yCenter, int radius)
     Triangle trStart; // Первый треугольник из первой вершины.
     Triangle trTemp; // Временный треугольник для заполнения  массива
 
-    Triangle triangles[numPoints+1]; // Массив треугольников из точек вершин звезды.
+    Triangle triangles[numPoints+1]; // Массив треугольников из точек вненших вершин звезды.
     triangles[0] = trStart;
     int trianglesIndex = 1;
     int countAngles = 0;  
-    // Вычислние вершин звезды и формирование из них треугольники
+    // Вычислние вершин звезды и формирование из них треугольников
     for (int i = 0; i < numPoints * 2; i++)
     {
         double angle = startAngle + i * angleStep / 2;
@@ -108,7 +107,7 @@ void DrawStarTopsShading(HDC hdc, int xCenter, int yCenter, int radius)
         starPoints[i].x = static_cast<LONG>(xCenter + r * cos(angle));
         starPoints[i].y = static_cast<LONG>(yCenter + r * sin(angle));
 
-        // Вычисление точки вершины первого треугольника из точки первой вершины звезды
+        // Вычисление точки вершины первого треугольника из точки первой внешней вершины звезды
         if (i == 0)
         {
             triangles[0].ptTop.x = starPoints[i].x;
@@ -117,7 +116,7 @@ void DrawStarTopsShading(HDC hdc, int xCenter, int yCenter, int radius)
 
         switch (countAngles)
         {
-            // Формирование треугольников из вершин звезды
+            // Формирование треугольников из внешних вершин звезды
         case 1:
             trTemp.ptRightBt.x = starPoints[i].x;
             trTemp.ptRightBt.y = starPoints[i].y;
@@ -155,7 +154,7 @@ void DrawStarTopsShading(HDC hdc, int xCenter, int yCenter, int radius)
     Ellipse(hdc, xCenter - radius, yCenter - radius, xCenter + radius, yCenter + radius);
     Polygon(hdc, starPoints, numPoints * 2);
 
-    // Соединение внутренних вершин звезды и образование соприкасаемых треугольников из вершин.
+    // Соединение внутренних вершин звезды и образование соприкасаемых треугольников из внешних вершин.
     for (int j = 0; j <= numPoints; j++)
     {
         POINT triangleBottomPoints[2];
@@ -167,7 +166,7 @@ void DrawStarTopsShading(HDC hdc, int xCenter, int yCenter, int radius)
     SelectObject(hdc, hOldBrushEl); 
     SelectObject(hdc, hPen);
 
-    // Заполнение треугольников (из вершин звезды ) кистью с штриховкой
+    // Заполнение треугольников (из внешних вершин звезды ) кистью с штриховкой
     HPEN hOldBrushTops = (HPEN)SelectObject(hdc, hBrushTops);
     for (int j = 0; j <= numPoints; j++)
     {
